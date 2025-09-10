@@ -55,7 +55,6 @@
                     array_temp.push(item.harga_beli);
                     array_temp.push(item.laba);
                     array_temp.push(harga_jual);
-                    array_temp.push(item.supplier);
                     array_temp.push(item.kategori_nama ?? '-'); // kategori ditambahkan
                     array_temp.push(imgTag);
                     array_temp.push(html);
