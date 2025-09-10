@@ -35,3 +35,5 @@ Route::get('/master-items/update-random-data', [App\Http\Controllers\MasterItems
 
 Route::get('kategori-items/index', [KategoriItemController::class, 'index']);
 Route::resource('kategori-items', KategoriItemController::class);
+
+Route::resource('kategori-items', \App\Http\Controllers\KategoriItemController::class);

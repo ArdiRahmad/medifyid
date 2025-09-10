@@ -24,76 +24,52 @@ class KategoriItemController extends Controller
         return view('kategori-items.index', compact('kategori'));
     }
 
-    /**
-     * Form tambah kategori.
-     */
     public function create()
     {
         return view('kategori-items.create');
     }
 
-    /**
-     * Simpan kategori baru.
-     */
     public function store(Request $request)
     {
         $request->validate([
             'kode' => 'required|unique:kategori_items,kode',
-            'nama' => 'required',
+            'nama' => 'required'
         ]);
 
-        KategoriItem::create([
-            'kode' => $request->kode,
-            'nama' => $request->nama,
-        ]);
+        KategoriItem::create($request->only(['kode', 'nama']));
 
-        return redirect()->route('kategori-items.index')->with('success', 'Kategori berhasil ditambahkan');
+        return redirect()->route('kategori-items.index');
     }
 
-    /**
-     * Detail kategori dan items yang berelasi.
-     */
-    public function show(KategoriItem $kategoriItem)
+    public function show($id)
     {
-        // ambil semua items yang punya kategori ini
-        $items = $kategoriItem->items;
-
-        return view('kategori-items.show', compact('kategoriItem', 'items'));
+        $kategori = KategoriItem::with('masterItems')->findOrFail($id);
+        return view('kategori-items.show', compact('kategori'));
     }
 
-    /**
-     * Form edit kategori.
-     */
-    public function edit(KategoriItem $kategoriItem)
+    public function edit($id)
     {
-        return view('kategori-items.edit', compact('kategoriItem'));
+        $kategori = KategoriItem::findOrFail($id);
+        return view('kategori-items.edit', compact('kategori'));
     }
 
-    /**
-     * Update kategori.
-     */
-    public function update(Request $request, KategoriItem $kategoriItem)
+    public function update(Request $request, $id)
     {
+        $kategori = KategoriItem::findOrFail($id);
+
         $request->validate([
-            'kode' => 'required|unique:kategori_items,kode,' . $kategoriItem->id,
-            'nama' => 'required',
+            'kode' => 'required|unique:kategori_items,kode,' . $kategori->id,
+            'nama' => 'required'
         ]);
 
-        $kategoriItem->update([
-            'kode' => $request->kode,
-            'nama' => $request->nama,
-        ]);
+        $kategori->update($request->only(['kode', 'nama']));
 
-        return redirect()->route('kategori-items.index')->with('success', 'Kategori berhasil diperbarui');
+        return redirect()->route('kategori-items.index');
     }
 
-    /**
-     * Hapus kategori.
-     */
-    public function destroy(KategoriItem $kategoriItem)
+    public function destroy($id)
     {
-        $kategoriItem->delete();
-
-        return redirect()->route('kategori-items.index')->with('success', 'Kategori berhasil dihapus');
+        KategoriItem::findOrFail($id)->delete();
+        return redirect()->route('kategori-items.index');
     }
 }
