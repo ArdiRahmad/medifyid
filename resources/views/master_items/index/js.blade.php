@@ -3,75 +3,81 @@
 <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    var data_per_fetch = 500;
-    var data_fetched = 0;
-
     $(document).ready(function() {
         $('#table').DataTable({
             searching: false,
             order: [[0, 'desc']],
         });
-        getData()
-    });
 
-    $('.btn-get-data').click(function() {
-        getData()
+        // load awal
+        getData();
+
+        // tombol filter
+        $('.btn-get-data').click(function() {
+            getData();
+        });
     });
 
     function getData(){
         $('#loading-filter').show();
-        var dataTableObj = $('#table').DataTable();
-        var filter_kode = $('#filter-kode').val();
-        var filter_nama = $('#filter-nama').val();
-        var filter_harga_min = $('#filter-harga-min').val();
-        var filter_harga_max = $('#filter-harga-max').val();
+        let dataTableObj = $('#table').DataTable();
+
+        // ambil filter
+        let filter_kode      = $('#filter-kode').val();
+        let filter_nama      = $('#filter-nama').val();
+        let filter_harga_min = $('#filter-harga-min').val();
+        let filter_harga_max = $('#filter-harga-max').val();
+        let filter_kategori  = $('#filter-kategori').val();
+
+        // kosongkan tabel sebelum isi
         dataTableObj.clear().draw();
 
         $.ajax({
             url: '{{ url("master-items/search") }}',
+            type: 'GET',
             dataType: 'json',
-            tryCount: 0,
-            retryLimit: 3,
-            data: 'kode=' + filter_kode + '&nama=' + filter_nama + '&hargamin=' + filter_harga_min + '&hargamax=' + filter_harga_max,
+            data: {
+                kode: filter_kode,
+                nama: filter_nama,
+                hargamin: filter_harga_min,
+                hargamax: filter_harga_max,
+                kategori: filter_kategori
+            },
             success: function(results) {
-                var data = results.data;
+                let data = results.data || [];
 
                 $.each(data, function(index, item) {
-                    let array_temp = [];
-                    let harga_jual = item.harga_beli + item.harga_beli * item.laba / 100;
-                    harga_jual = Math.round(harga_jual);
-                    let kode = item.kode;
-
-                    let html = `<a href="{{ url('master-items/view/') }}/` + kode + `" class="btn btn-primary">View</a>`;
+                    let harga_beli = parseFloat(item.harga_beli) || 0;
+                    let laba = parseFloat(item.laba) || 0;
+                    let harga_jual = Math.round(harga_beli + (harga_beli * laba / 100));
 
                     let imgTag = item.img_url 
                         ? `<img src="${item.img_url}" alt="${item.nama}" width="60" height="60">` 
                         : `<span class="text-muted">No Image</span>`;
 
-                    // susunan kolom
-                    array_temp.push(item.kode);
-                    array_temp.push(item.nama);
-                    array_temp.push(item.jenis);
-                    array_temp.push(item.harga_beli);
-                    array_temp.push(item.laba);
-                    array_temp.push(harga_jual);
-                    array_temp.push(item.kategori_nama ?? '-'); // kategori ditambahkan
-                    array_temp.push(imgTag);
-                    array_temp.push(html);
+                    let actionBtn = `<a href="{{ url('master-items/view/') }}/${item.kode}" class="btn btn-primary btn-sm">View</a>`;
 
-                    dataTableObj.row.add(array_temp).draw(true);
+                    // urutan kolom
+                    let array_temp = [
+                        item.kode ?? '-',
+                        item.nama ?? '-',
+                        item.jenis ?? '-',
+                        harga_beli,
+                        laba,
+                        harga_jual,
+                        item.kategori_nama ?? '-',
+                        imgTag,
+                        actionBtn
+                    ];
+
+                    dataTableObj.row.add(array_temp).draw(false);
                 });
+
                 $('#loading-filter').hide();
             },
-            error: function(xhr, textStatus, errorThrown) {
-                this.tryCount++;
-                if (this.tryCount <= this.retryLimit) {
-                    $.ajax(this);
-                    return;
-                }
+            error: function() {
                 alert('Terjadi kesalahan server, tidak dapat mengambil data');
                 $('#loading-filter').hide();
-                return;
             }
         });
     }

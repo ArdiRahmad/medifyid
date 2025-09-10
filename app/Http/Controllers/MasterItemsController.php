@@ -13,40 +13,58 @@ class MasterItemsController extends Controller
     }
 
     public function search(Request $request)
-    {
-        $kode = $request->kode;
-        $nama = $request->nama;
-        $hargamin = $request->hargamin;
-        $hargamax = $request->hargamax;
+{
+    $kode     = $request->kode;
+    $nama     = $request->nama;
+    $hargamin = $request->hargamin;
+    $hargamax = $request->hargamax;
+    $kategori = $request->kategori; // ⬅ filter kategori
 
-        $data_search = MasterItem::query();
+    $data_search = MasterItem::query()
+        ->leftJoin('kategori_items', 'master_items.kategori_item_id', '=', 'kategori_items.id');
 
-        if (!empty($kode)) {
-            $data_search->where('kode', $kode);
-        }
-
-        if (!empty($nama)) {
-            $data_search->where('nama', 'LIKE', '%' . $nama . '%');
-        }
-
-        if (!empty($hargamin) && !empty($hargamax)) {
-            $data_search->whereBetween('harga_beli', [$hargamin, $hargamax]);
-        } elseif (!empty($hargamin)) {
-            $data_search->where('harga_beli', '>=', $hargamin);
-        } elseif (!empty($hargamax)) {
-            $data_search->where('harga_beli', '<=', $hargamax);
-        }
-
-        $data_search = $data_search
-            ->select('kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'img_url', 'kategori_item_id')
-            ->orderBy('id')
-            ->get();
-
-        return response()->json([
-            'status' => 200,
-            'data'   => $data_search,
-        ]);
+    if (!empty($kode)) {
+        $data_search->where('master_items.kode', $kode);
     }
+
+    if (!empty($nama)) {
+        $data_search->where('master_items.nama', 'LIKE', '%' . $nama . '%');
+    }
+
+    if (!empty($hargamin) && !empty($hargamax)) {
+        $data_search->whereBetween('master_items.harga_beli', [$hargamin, $hargamax]);
+    } elseif (!empty($hargamin)) {
+        $data_search->where('master_items.harga_beli', '>=', $hargamin);
+    } elseif (!empty($hargamax)) {
+        $data_search->where('master_items.harga_beli', '<=', $hargamax);
+    }
+
+    if (!empty($kategori)) {
+        $data_search->where('kategori_items.nama', 'LIKE', '%' . $kategori . '%');
+        // atau kalau pakai id kategori:
+        // $data_search->where('master_items.kategori_item_id', $kategori);
+    }
+
+    $data_search = $data_search
+        ->select(
+            'master_items.kode',
+            'master_items.nama',
+            'master_items.jenis',
+            'master_items.harga_beli',
+            'master_items.laba',
+            'master_items.supplier',
+            'master_items.img_url',
+            'master_items.kategori_item_id',
+            'kategori_items.nama as kategori_nama'
+        )
+        ->orderBy('master_items.id')
+        ->get();
+
+    return response()->json([
+        'status' => 200,
+        'data'   => $data_search,
+    ]);
+}
 
     public function formView($method, $id = 0)
     {
