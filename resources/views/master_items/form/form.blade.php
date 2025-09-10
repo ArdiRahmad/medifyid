@@ -1,4 +1,4 @@
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
     @csrf
     @if($method == 'edit')
     <div class="form-group">
@@ -22,18 +22,20 @@
         <input type="number" class="form-control" name="laba" required  value="{{$item->laba ?? ''}}">
     </div>
 
-    @php $selected = $item->supplier ?? ''; @endphp
+   @php $selected = $item->kategori_item_id ?? ''; @endphp
     <div class="form-group">
-        <label>Supplier</label>
-        <select class="form-control" required name="supplier">
-            <option @if($selected == '') selected @endif value="">--Pilih--</option>
-            <option @if($selected == 'Tokopaedi') selected @endif>Tokopaedi</option>
-            <option @if($selected == 'Bukulapuk') selected @endif>Bukulapuk</option>
-            <option @if($selected == 'TokoBagas') selected @endif>TokoBagas</option>
-            <option @if($selected == 'E Commurz') selected @endif>E Commurz</option>
-            <optio @if($selected == 'Blublu') selected @endif>Blublu</option>
+        <label>Kategori</label>
+        <select class="form-control" required name="kategori_item_id">
+            <option value="">--Pilih--</option>
+            @foreach($kategoriItems as $kategori)
+                <option value="{{ $kategori->id }}" 
+                    @if($selected == $kategori->id) selected @endif>
+                    {{ $kategori->nama }}
+                </option>
+            @endforeach
         </select>
     </div>
+
 
     @php $selected = $item->jenis ?? ''; @endphp
     <div class="form-group">
@@ -48,6 +50,15 @@
         </select>
     </div>
 
+     <div class="form-group">
+        <label>Upload Gambar</label>
+        <input type="file" class="form-control" name="img_url" accept="image/*">
+        @if(!empty($item->img_url))
+            <div class="mt-2">
+                <img src="{{ asset($item->img_url) }}" alt="Preview" width="100">
+            </div>
+        @endif
+    </div>
     <button class="btn btn-primary mt-3">Submit</button>
 
 </form>
